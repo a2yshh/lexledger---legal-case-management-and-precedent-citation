@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block title %}Hearing Details - Legal Case Management{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <a href="/hearings" class="btn btn-link px-0"><i class="fas fa-arrow-left"></i> Back to Hearings</a>
+        <div class="card">
+            <div class="card-header bg-dark text-white">
+                <h4 class="mb-0">Hearing #{{ hearing.hearing_id }}</h4>
+            </div>
+            <div class="card-body">
+                <p><strong>Case:</strong> <a href="/case/{{ hearing.case_id }}">{{ hearing.case_number }}</a> - {{ hearing.title }}</p>
+                <p><strong>Date:</strong> {{ hearing.hearing_date }}</p>
+                <p><strong>Time:</strong> {{ hearing.hearing_time }}</p>
+                <p><strong>Type:</strong> {{ hearing.hearing_type }}</p>
+                <p><strong>Courtroom:</strong> {{ hearing.courtroom_number }}</p>
+                <p><strong>Judge:</strong> {{ hearing.judge_name }}</p>
+                <p><strong>Outcome:</strong> {{ hearing.outcome or 'Scheduled' }}</p>
+                <p><strong>Duration:</strong> {{ hearing.duration_minutes or 'N/A' }} minutes</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

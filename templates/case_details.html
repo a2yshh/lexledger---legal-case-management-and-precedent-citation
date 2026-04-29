@@ -1,0 +1,311 @@
+{% extends "base.html" %}
+
+{% block title %}{{ case.case_number }} - Legal Case Management{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="/">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="/cases">Cases</a></li>
+                <li class="breadcrumb-item active">{{ case.case_number }}</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<!-- Manage Case Relations -->
+<div class="row" id="manage-relations">
+    <div class="col-12">
+        <div class="card mb-4">
+            <div class="card-header bg-info text-white">
+                <h5 class="mb-0"><i class="fas fa-tools"></i> Manage Case Actions</h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <form method="POST" action="/case/{{ case.case_id }}/add-client">
+                            <h6>Add Client</h6>
+                            <div class="mb-2">
+                                <select class="form-select" name="client_id" required>
+                                    <option value="">Select Client...</option>
+                                    {% for client_item in all_clients %}
+                                    <option value="{{ client_item.client_id }}">{{ client_item.first_name }} {{ client_item.last_name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="mb-2">
+                                <select class="form-select" name="party_type" required>
+                                    <option value="Petitioner">Petitioner</option>
+                                    <option value="Respondent">Respondent</option>
+                                    <option value="Plaintiff">Plaintiff</option>
+                                    <option value="Defendant">Defendant</option>
+                                    <option value="Accused">Accused</option>
+                                </select>
+                            </div>
+                            <button class="btn btn-sm btn-primary" type="submit">Add Client</button>
+                        </form>
+                    </div>
+                    <div class="col-md-6">
+                        <form method="POST" action="/case/{{ case.case_id }}/add-lawyer">
+                            <h6>Add Legal Team</h6>
+                            <div class="mb-2">
+                                <select class="form-select" name="lawyer_id" required>
+                                    <option value="">Select Lawyer...</option>
+                                    {% for lawyer_item in all_lawyers %}
+                                    <option value="{{ lawyer_item.lawyer_id }}">{{ lawyer_item.first_name }} {{ lawyer_item.last_name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="mb-2">
+                                <select class="form-select" name="role" required>
+                                    <option value="Lead Counsel">Lead Counsel</option>
+                                    <option value="Junior">Junior</option>
+                                    <option value="Assistant">Assistant</option>
+                                </select>
+                            </div>
+                            <button class="btn btn-sm btn-success" type="submit">Add Team Member</button>
+                        </form>
+                    </div>
+                    <div class="col-md-6">
+                        <form method="POST" action="/case/{{ case.case_id }}/add-precedent">
+                            <h6>Add Precedent</h6>
+                            <div class="mb-2">
+                                <select class="form-select" name="precedent_id" required>
+                                    <option value="">Select Precedent...</option>
+                                    {% for precedent_item in all_precedents %}
+                                    <option value="{{ precedent_item.precedent_id }}">{{ precedent_item.citation }} - {{ precedent_item.case_name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="row g-2">
+                                <div class="col-md-4">
+                                    <input type="number" min="1" max="10" name="relevance_score" class="form-control" placeholder="Auto (leave blank)">
+                                </div>
+                                <div class="col-md-4">
+                                    <select class="form-select" name="application_type" required>
+                                        <option value="Supporting">Supporting</option>
+                                        <option value="Distinguishing">Distinguishing</option>
+                                        <option value="Overruling">Overruling</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <select class="form-select" name="cited_by_party" required>
+                                        <option value="Petitioner">Petitioner</option>
+                                        <option value="Respondent">Respondent</option>
+                                        <option value="Court">Court</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <small class="text-muted">Leave relevance blank to auto-calculate from case type and case category.</small>
+                            <button class="btn btn-sm btn-dark mt-2" type="submit">Add Precedent</button>
+                        </form>
+                    </div>
+                    <div class="col-md-6">
+                        <form method="POST" action="/case/{{ case.case_id }}/add-hearing">
+                            <h6>Add Hearing</h6>
+                            <div class="row g-2">
+                                <div class="col-md-6">
+                                    <input type="date" name="hearing_date" class="form-control" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <input type="time" name="hearing_time" class="form-control" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <select class="form-select" name="courtroom_id" required>
+                                        <option value="">Courtroom...</option>
+                                        {% for room in all_courtrooms %}
+                                        <option value="{{ room.courtroom_id }}">{{ room.courtroom_number }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <select class="form-select" name="judge_id" required>
+                                        <option value="">Judge...</option>
+                                        {% for judge_item in all_case_judges %}
+                                        <option value="{{ judge_item.judge_id }}">{{ judge_item.first_name }} {{ judge_item.last_name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="row g-2 mt-1">
+                                <div class="col-md-8">
+                                    <select class="form-select" name="hearing_type" required>
+                                        <option value="Regular">Regular</option>
+                                        <option value="Urgent">Urgent</option>
+                                        <option value="Final">Final</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4">
+                                    <input type="number" min="1" name="duration_minutes" value="60" class="form-control">
+                                </div>
+                            </div>
+                            <button class="btn btn-sm btn-warning mt-2" type="submit">Add Hearing</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Case Header -->
+<div class="row">
+    <div class="col-12">
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h3 class="mb-0">{{ case.case_number }}: {{ case.title }}</h3>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Filing Date:</strong> {{ case.filing_date }}</p>
+                        <p><strong>Status:</strong> <span class="badge bg-info">{{ case.status_name }}</span></p>
+                        <p><strong>Priority:</strong> 
+                            {% if case.priority_level == 'Urgent' %}
+                                <span class="badge bg-danger">{{ case.priority_level }}</span>
+                            {% elif case.priority_level == 'High' %}
+                                <span class="badge bg-warning">{{ case.priority_level }}</span>
+                            {% else %}
+                                <span class="badge bg-secondary">{{ case.priority_level }}</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Court:</strong> {{ case.court_name }}</p>
+                        <p><strong>Judge:</strong> {{ case.judge_name or 'Not Assigned' }}</p>
+                        <p><strong>Case Value:</strong> ₹{{ "{:,.2f}".format(case.case_value) if case.case_value else 'N/A' }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Parties Involved -->
+<div class="row">
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header bg-secondary text-white">
+                <h5 class="mb-0"><i class="fas fa-users"></i> Clients</h5>
+            </div>
+            <div class="card-body">
+                <ul class="list-group">
+                    {% for client in clients %}
+                    <li class="list-group-item">
+                        <strong>{{ client.first_name }} {{ client.last_name }}</strong>
+                        <span class="badge bg-primary float-end">{{ client.party_type }}</span>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header bg-secondary text-white">
+                <h5 class="mb-0"><i class="fas fa-user-tie"></i> Legal Team</h5>
+            </div>
+            <div class="card-body">
+                <ul class="list-group">
+                    {% for lawyer in lawyers %}
+                    <li class="list-group-item">
+                        <strong>{{ lawyer.first_name }} {{ lawyer.last_name }}</strong>
+                        <span class="badge bg-success float-end">{{ lawyer.role }}</span>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Precedents Cited -->
+<div class="row">
+    <div class="col-12">
+        <div class="card mb-4">
+            <div class="card-header bg-dark text-white">
+                <h5 class="mb-0"><i class="fas fa-gavel"></i> Precedents Cited</h5>
+            </div>
+            <div class="card-body">
+                {% if precedents %}
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Precedent</th>
+                                <th>Citation</th>
+                                <th>Relevance</th>
+                                <th>Application</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for prec in precedents %}
+                            <tr>
+                                <td>{{ prec.case_name }}</td>
+                                <td><code>{{ prec.citation }}</code></td>
+                                <td>
+                                    <div class="progress" style="height: 20px;">
+                                        <div class="progress-bar {% if prec.relevance_score >= 8 %}bg-success{% elif prec.relevance_score >= 6 %}bg-warning{% else %}bg-danger{% endif %}" 
+                                             style="width: {{ prec.relevance_score * 10 }}%">
+                                            {{ prec.relevance_score }}/10
+                                        </div>
+                                    </div>
+                                </td>
+                                <td><span class="badge bg-info">{{ prec.application_type }}</span></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-muted">No precedents cited yet.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Hearings -->
+<div class="row">
+    <div class="col-12">
+        <div class="card mb-4">
+            <div class="card-header bg-dark text-white">
+                <h5 class="mb-0"><i class="fas fa-calendar-alt"></i> Hearings</h5>
+            </div>
+            <div class="card-body">
+                {% if hearings %}
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Time</th>
+                                <th>Type</th>
+                                <th>Courtroom</th>
+                                <th>Outcome</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for hearing in hearings %}
+                            <tr>
+                                <td>{{ hearing.hearing_date }}</td>
+                                <td>{{ hearing.hearing_time }}</td>
+                                <td><span class="badge bg-primary">{{ hearing.hearing_type }}</span></td>
+                                <td>{{ hearing.courtroom_number }}</td>
+                                <td>{{ hearing.outcome or 'Scheduled' }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-muted">No hearings scheduled yet.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

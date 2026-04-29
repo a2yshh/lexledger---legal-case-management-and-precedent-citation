@@ -1,0 +1,244 @@
+{% extends "base.html" %}
+
+{% block title %}Lawyers - Legal Case Management{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <h1><i class="fas fa-user-tie"></i> Legal Team Directory</h1>
+        <p class="text-muted">Manage lawyers and their caseload</p>
+    </div>
+    <div class="col-md-4 text-end">
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addLawyerModal">
+            <i class="fas fa-plus"></i> Add New Lawyer
+        </button>
+    </div>
+</div>
+
+<!-- Search and Filter -->
+<div class="card mt-4">
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-5">
+                <div class="input-group">
+                    <span class="input-group-text"><i class="fas fa-search"></i></span>
+                    <input type="text" class="form-control" id="searchLawyer" placeholder="Search by name or bar council number...">
+                </div>
+            </div>
+            <div class="col-md-3">
+                <select class="form-select" id="filterSpecialization">
+                    <option value="">All Specializations</option>
+                    <option value="Criminal Law">Criminal Law</option>
+                    <option value="Civil Law">Civil Law</option>
+                    <option value="Corporate Law">Corporate Law</option>
+                    <option value="Family Law">Family Law</option>
+                    <option value="Constitutional Law">Constitutional Law</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <select class="form-select" id="sortLawyers">
+                    <option value="caseload">By Caseload</option>
+                    <option value="experience">By Experience</option>
+                    <option value="success">By Success Rate</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button class="btn btn-secondary w-100" onclick="filterLawyers()">
+                    <i class="fas fa-filter"></i> Filter
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Lawyers Grid/Table -->
+<div class="row mt-4">
+    {% for lawyer in lawyers %}
+    <div class="col-md-6 col-lg-4 mb-4">
+        <div class="card h-100 lawyer-card">
+            <div class="card-header bg-dark text-white">
+                <h5 class="mb-0">
+                    <i class="fas fa-user-tie"></i> 
+                    {{ lawyer.first_name }} {{ lawyer.last_name }}
+                </h5>
+            </div>
+            <div class="card-body">
+                <p class="mb-2">
+                    <strong>Bar Council:</strong> 
+                    <code>{{ lawyer.bar_council_number }}</code>
+                </p>
+                <p class="mb-2">
+                    <strong>Specialization:</strong>
+                    <span class="badge bg-info">{{ lawyer.specialization_name or 'General Practice' }}</span>
+                </p>
+                <p class="mb-2">
+                    <strong>Experience:</strong> 
+                    {{ lawyer.experience_years }} years
+                </p>
+                <p class="mb-2">
+                    <strong>Success Rate:</strong>
+                    <div class="progress" style="height: 20px;">
+                        <div class="progress-bar bg-success" 
+                             style="width: {{ lawyer.success_rate or 0 }}%">
+                            {{ lawyer.success_rate or 0 }}%
+                        </div>
+                    </div>
+                </p>
+                <hr>
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <strong>Active Cases:</strong>
+                        <span class="badge bg-primary rounded-pill">
+                            {{ lawyer.active_cases }}
+                        </span>
+                    </div>
+                    <div>
+                        {% if lawyer.active_cases > 8 %}
+                            <span class="badge bg-danger">High Load</span>
+                        {% elif lawyer.active_cases > 5 %}
+                            <span class="badge bg-warning">Moderate</span>
+                        {% else %}
+                            <span class="badge bg-success">Available</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer">
+                <div class="btn-group w-100" role="group">
+                    <button class="btn btn-sm btn-primary" onclick="viewLawyerProfile({{ lawyer.lawyer_id }})">
+                        <i class="fas fa-user"></i> Profile
+                    </button>
+                    <button class="btn btn-sm btn-success" onclick="assignCase({{ lawyer.lawyer_id }})">
+                        <i class="fas fa-plus"></i> Assign
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+{% if not lawyers %}
+<div class="alert alert-info text-center">
+    <i class="fas fa-info-circle"></i> No lawyers found in the system.
+</div>
+{% endif %}
+
+<!-- Statistics -->
+<div class="row mt-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body text-center">
+                <h3>{{ lawyers|length }}</h3>
+                <p class="mb-0">Total Lawyers</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body text-center">
+                <h3>{{ lawyers|selectattr('active_cases', 'lt', 5)|list|length }}</h3>
+                <p class="mb-0">Available</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-warning text-white">
+            <div class="card-body text-center">
+                <h3>{{ lawyers|sum(attribute='active_cases') }}</h3>
+                <p class="mb-0">Total Active Cases</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-info text-white">
+            <div class="card-body text-center">
+                <h3>{{ ((lawyers|sum(attribute='success_rate') / lawyers|length)|round(1)) if lawyers|length > 0 else 0 }}%</h3>
+                <p class="mb-0">Avg Success Rate</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Lawyer Modal -->
+<div class="modal fade" id="addLawyerModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">Add New Lawyer</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form method="POST" action="/add_lawyer">
+                    <div class="mb-3">
+                        <label class="form-label">First Name *</label>
+                        <input type="text" class="form-control" name="first_name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Last Name *</label>
+                        <input type="text" class="form-control" name="last_name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Bar Council Number *</label>
+                        <input type="text" class="form-control" name="bar_council_number" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Email *</label>
+                        <input type="email" class="form-control" name="email" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Contact Number *</label>
+                        <input type="tel" class="form-control" name="contact_number" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Specialization</label>
+                        <select class="form-select" name="specialization_id">
+                            <option value="">Select...</option>
+                            {% for spec in specializations %}
+                            <option value="{{ spec.specialization_id }}">{{ spec.specialization_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Experience Years</label>
+                        <input type="number" class="form-control" name="experience_years" min="0">
+                    </div>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Add Lawyer
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function viewLawyerProfile(lawyerId) {
+    window.location.href = `/lawyer/${lawyerId}`;
+}
+
+function assignCase(lawyerId) {
+    alert('Assign case to lawyer ID: ' + lawyerId);
+}
+
+function filterLawyers() {
+    const search = document.getElementById('searchLawyer').value;
+    const spec = document.getElementById('filterSpecialization').value;
+    const sort = document.getElementById('sortLawyers').value;
+    window.location.href = `/lawyers?search=${search}&spec=${spec}&sort=${sort}`;
+}
+</script>
+
+<style>
+.lawyer-card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.lawyer-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+}
+</style>
+{% endblock %}

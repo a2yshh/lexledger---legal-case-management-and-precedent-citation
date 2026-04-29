@@ -1,0 +1,217 @@
+{% extends "base.html" %}
+
+{% block title %}Clients - Legal Case Management{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <h1><i class="fas fa-users"></i> Client Directory</h1>
+        <p class="text-muted">Manage all clients in the system</p>
+    </div>
+    <div class="col-md-4 text-end">
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addClientModal">
+            <i class="fas fa-user-plus"></i> Add New Client
+        </button>
+    </div>
+</div>
+
+<!-- Search and Filter -->
+<div class="card mt-4">
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <div class="input-group">
+                    <span class="input-group-text"><i class="fas fa-search"></i></span>
+                    <input type="text" class="form-control" id="searchClient" placeholder="Search by name, email, or phone...">
+                </div>
+            </div>
+            <div class="col-md-3">
+                <select class="form-select" id="filterClientType">
+                    <option value="">All Client Types</option>
+                    <option value="Individual">Individual</option>
+                    <option value="Organization">Organization</option>
+                    <option value="Government">Government</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <button class="btn btn-secondary w-100" onclick="filterClients()">
+                    <i class="fas fa-filter"></i> Apply Filter
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Clients Table -->
+<div class="card mt-4">
+    <div class="card-header bg-dark text-white">
+        <h5 class="mb-0">All Clients ({{ clients|length }})</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead class="table-light">
+                    <tr>
+                        <th>Client ID</th>
+                        <th>Name</th>
+                        <th>Type</th>
+                        <th>Contact</th>
+                        <th>Email</th>
+                        <th>Active Cases</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for client in clients %}
+                    <tr>
+                        <td><strong>#{{ client.client_id }}</strong></td>
+                        <td>
+                            <i class="fas fa-user-circle text-primary"></i>
+                            {{ client.first_name }} {{ client.last_name }}
+                        </td>
+                        <td>
+                            {% if client.client_type == 'Individual' %}
+                                <span class="badge bg-info">{{ client.client_type }}</span>
+                            {% elif client.client_type == 'Organization' %}
+                                <span class="badge bg-success">{{ client.client_type }}</span>
+                            {% else %}
+                                <span class="badge bg-warning">{{ client.client_type }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <i class="fas fa-phone"></i> {{ client.contact_number }}
+                        </td>
+                        <td>
+                            <i class="fas fa-envelope"></i> {{ client.email }}
+                        </td>
+                        <td>
+                            <span class="badge bg-primary rounded-pill">
+                                {{ client.total_cases }} case(s)
+                            </span>
+                        </td>
+                        <td>
+                            <div class="btn-group" role="group">
+                                <button class="btn btn-sm btn-primary" onclick="viewClientDetails({{ client.client_id }})">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="btn btn-sm btn-success" onclick="editClient({{ client.client_id }})">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if not clients %}
+        <div class="alert alert-info text-center">
+            <i class="fas fa-info-circle"></i> No clients found. Add your first client!
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Client Statistics -->
+<div class="row mt-4">
+    <div class="col-md-3">
+        <div class="card bg-primary text-white">
+            <div class="card-body text-center">
+                <h3>{{ clients|length }}</h3>
+                <p class="mb-0">Total Clients</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-info text-white">
+            <div class="card-body text-center">
+                <h3>{{ clients|selectattr('client_type', 'equalto', 'Individual')|list|length }}</h3>
+                <p class="mb-0">Individual</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-success text-white">
+            <div class="card-body text-center">
+                <h3>{{ clients|selectattr('client_type', 'equalto', 'Organization')|list|length }}</h3>
+                <p class="mb-0">Organization</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card bg-warning text-white">
+            <div class="card-body text-center">
+                <h3>{{ clients|sum(attribute='total_cases') }}</h3>
+                <p class="mb-0">Total Cases</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Client Modal -->
+<div class="modal fade" id="addClientModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">Add New Client</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addClientForm" method="POST" action="/add_client">
+                    <div class="mb-3">
+                        <label class="form-label">First Name *</label>
+                        <input type="text" class="form-control" name="first_name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Last Name *</label>
+                        <input type="text" class="form-control" name="last_name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Client Type *</label>
+                        <select class="form-select" name="client_type" required>
+                            <option value="Individual">Individual</option>
+                            <option value="Organization">Organization</option>
+                            <option value="Government">Government</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Contact Number *</label>
+                        <input type="tel" class="form-control" name="contact_number" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Email *</label>
+                        <input type="email" class="form-control" name="email" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Address</label>
+                        <textarea class="form-control" name="address" rows="2"></textarea>
+                    </div>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Add Client
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function viewClientDetails(clientId) {
+    window.location.href = `/client/${clientId}`;
+}
+
+function editClient(clientId) {
+    // Implement edit functionality
+    alert('Edit client ID: ' + clientId);
+}
+
+function filterClients() {
+    const search = document.getElementById('searchClient').value;
+    const type = document.getElementById('filterClientType').value;
+    window.location.href = `/clients?search=${search}&type=${type}`;
+}
+</script>
+{% endblock %}

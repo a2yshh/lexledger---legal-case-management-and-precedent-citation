@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+
+{% block title %}Add New Case - Legal Case Management{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 offset-md-2">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h3 class="mb-0">Add New Case</h3>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="/add_case">
+                    <div class="mb-3">
+                        <label for="case_number" class="form-label">Case Number *</label>
+                        <input type="text" class="form-control" id="case_number" name="case_number" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="title" class="form-label">Case Title *</label>
+                        <input type="text" class="form-control" id="title" name="title" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="filing_date" class="form-label">Filing Date *</label>
+                        <input type="date" class="form-control" id="filing_date" name="filing_date" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="case_type_id" class="form-label">Case Type *</label>
+                        <select class="form-select" id="case_type_id" name="case_type_id" required>
+                            {% for type in case_types %}
+                            <option value="{{ type.case_type_id }}">{{ type.type_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- ✅ ADDED THIS BLOCK -->
+                    <div class="mb-3">
+                        <label for="case_category_id" class="form-label">Case Category *</label>
+                        <select class="form-select" id="case_category_id" name="case_category_id" required>
+                            {% for category in case_categories %}
+                            <option value="{{ category.category_id }}">
+                                {{ category.category_name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="priority_level" class="form-label">Priority *</label>
+                        <select class="form-select" id="priority_level" name="priority_level" required>
+                            <option value="Low">Low</option>
+                            <option value="Medium" selected>Medium</option>
+                            <option value="High">High</option>
+                            <option value="Urgent">Urgent</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="court_id" class="form-label">Court *</label>
+                        <select class="form-select" id="court_id" name="court_id" required>
+                            {% for court in courts %}
+                            <option value="{{ court.court_id }}">{{ court.court_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Add Case
+                        </button>
+                        <a href="/cases" class="btn btn-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

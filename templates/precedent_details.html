@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block title %}Precedent Details - Legal Case Management{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <a href="/precedents" class="btn btn-link px-0"><i class="fas fa-arrow-left"></i> Back to Precedents</a>
+        <div class="card">
+            <div class="card-header bg-dark text-white">
+                <h4 class="mb-0">{{ precedent.case_name }}</h4>
+            </div>
+            <div class="card-body">
+                <p><strong>Citation:</strong> <code>{{ precedent.citation }}</code></p>
+                <p><strong>Court:</strong> {{ precedent.court_name }}</p>
+                <p><strong>Judgment Date:</strong> {{ precedent.judgment_date }}</p>
+                <p><strong>Authority Level:</strong> {{ precedent.authority_level or 'N/A' }}</p>
+                <p><strong>Landmark:</strong> {{ 'Yes' if precedent.is_landmark else 'No' }}</p>
+                <p><strong>Summary:</strong> {{ precedent.summary or 'No summary available.' }}</p>
+                <p><strong>Headnotes:</strong> {{ precedent.headnotes or 'No headnotes available.' }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-secondary text-white">
+                <h5 class="mb-0">Cases Citing This Precedent</h5>
+            </div>
+            <div class="card-body">
+                {% if linked_cases %}
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Case Number</th>
+                                <th>Title</th>
+                                <th>Relevance</th>
+                                <th>Application</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for case_item in linked_cases %}
+                            <tr>
+                                <td><a href="/case/{{ case_item.case_id }}">{{ case_item.case_number }}</a></td>
+                                <td>{{ case_item.title }}</td>
+                                <td>{{ case_item.relevance_score }}/10</td>
+                                <td>{{ case_item.application_type }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-muted mb-0">This precedent is not linked to any case yet.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,219 @@
+{% extends "base.html" %}
+
+{% block title %}Precedents - Legal Case Management{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <h1><i class="fas fa-gavel"></i> Precedent Database</h1>
+        <p class="text-muted">Legal precedents cited across all cases</p>
+    </div>
+    <div class="col-md-4 text-end">
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addPrecedentModal">
+            <i class="fas fa-plus"></i> Add Precedent
+        </button>
+    </div>
+</div>
+
+<div class="card mt-4">
+    <div class="card-body">
+        <!-- Filter Options -->
+        <div class="row mb-3">
+            <div class="col-md-4">
+                <input type="text" class="form-control" id="searchPrecedent" placeholder="Search by citation or case name..." value="{{ selected_search or '' }}">
+            </div>
+            <div class="col-md-3">
+                <select class="form-select" id="filterLandmark">
+                    <option value="" {% if not selected_type %}selected{% endif %}>All Precedents</option>
+                    <option value="landmark" {% if selected_type == 'landmark' %}selected{% endif %}>Landmark Cases Only</option>
+                    <option value="regular" {% if selected_type == 'regular' %}selected{% endif %}>Regular Cases Only</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <select class="form-select" id="sortBy">
+                    <option value="most_cited" {% if selected_sort == 'most_cited' %}selected{% endif %}>Most Cited</option>
+                    <option value="recent" {% if selected_sort == 'recent' %}selected{% endif %}>Most Recent</option>
+                    <option value="oldest" {% if selected_sort == 'oldest' %}selected{% endif %}>Oldest First</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button class="btn btn-primary w-100" onclick="filterPrecedents()">
+                    <i class="fas fa-filter"></i> Filter
+                </button>
+            </div>
+        </div>
+
+        <!-- Precedents Table -->
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Citation</th>
+                        <th>Case Name</th>
+                        <th>Court</th>
+                        <th>Judgment Date</th>
+                        <th>Type</th>
+                        <th>Citations</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for precedent in precedents %}
+                    <tr>
+                        <td>
+                            <code class="text-primary">{{ precedent.citation }}</code>
+                        </td>
+                        <td>
+                            <strong>{{ precedent.case_name }}</strong>
+                        </td>
+                        <td>{{ precedent.court_name }}</td>
+                        <td>{{ precedent.judgment_date }}</td>
+                        <td>
+                            {% if precedent.is_landmark %}
+                                <span class="badge bg-warning text-dark">
+                                    <i class="fas fa-star"></i> Landmark
+                                </span>
+                            {% else %}
+                                <span class="badge bg-secondary">Regular</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="badge bg-info">
+                                {{ precedent.times_cited }} case(s)
+                            </span>
+                        </td>
+                        <td>
+                            <button class="btn btn-sm btn-primary" onclick="viewPrecedentDetails({{ precedent.precedent_id }})">
+                                <i class="fas fa-eye"></i> Details
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if not precedents %}
+        <div class="alert alert-info text-center">
+            <i class="fas fa-info-circle"></i> No precedents found in the database.
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row mt-4">
+    <div class="col-md-4">
+        <div class="card bg-light">
+            <div class="card-body text-center">
+                <h3 class="text-primary">{{ precedents|length }}</h3>
+                <p class="mb-0">Total Precedents</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card bg-light">
+            <div class="card-body text-center">
+                <h3 class="text-warning">
+                    {{ precedents|selectattr('is_landmark')|list|length }}
+                </h3>
+                <p class="mb-0">Landmark Cases</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card bg-light">
+            <div class="card-body text-center">
+                <h3 class="text-success">
+                    {{ precedents|sum(attribute='times_cited') }}
+                </h3>
+                <p class="mb-0">Total Citations</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function viewPrecedentDetails(precedentId) {
+    window.location.href = `/precedent/${precedentId}`;
+}
+
+function filterPrecedents() {
+    // Implement filtering logic
+    const search = document.getElementById('searchPrecedent').value;
+    const landmark = document.getElementById('filterLandmark').value;
+    const sort = document.getElementById('sortBy').value;
+    
+    // Reload page with query parameters
+    window.location.href = `/precedents?search=${search}&type=${landmark}&sort=${sort}`;
+}
+</script>
+
+<div class="modal fade" id="addPrecedentModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-dark text-white">
+                <h5 class="modal-title">Add New Precedent</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form method="POST" action="/add_precedent">
+                    <div class="mb-3">
+                        <label class="form-label">Case Name *</label>
+                        <input type="text" class="form-control" name="case_name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Citation *</label>
+                        <input type="text" class="form-control" name="citation" required>
+                    </div>
+                    <div class="row g-2">
+                        <div class="col-md-6">
+                            <label class="form-label">Court *</label>
+                            <select class="form-select" name="court_id" required>
+                                <option value="">Select Court...</option>
+                                {% for court in court_options %}
+                                <option value="{{ court.court_id }}">{{ court.court_name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Judgment Date *</label>
+                            <input type="date" class="form-control" name="judgment_date" required>
+                        </div>
+                    </div>
+                    <div class="row g-2 mt-1">
+                        <div class="col-md-6">
+                            <label class="form-label">Case Type</label>
+                            <select class="form-select" name="case_type_id">
+                                <option value="">Select Type...</option>
+                                {% for ctype in case_type_options %}
+                                <option value="{{ ctype.case_type_id }}">{{ ctype.type_name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Authority (1-5)</label>
+                            <input type="number" min="1" max="5" class="form-control" name="authority_level" value="3">
+                        </div>
+                        <div class="col-md-3 d-flex align-items-end">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="is_landmark" id="isLandmark">
+                                <label class="form-check-label" for="isLandmark">Landmark</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3 mt-2">
+                        <label class="form-label">Summary</label>
+                        <textarea class="form-control" name="summary" rows="3"></textarea>
+                    </div>
+                    <div class="d-grid">
+                        <button class="btn btn-primary" type="submit">
+                            <i class="fas fa-save"></i> Save Precedent
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
