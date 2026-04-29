@@ -3,6 +3,7 @@ from database import execute_query
 from datetime import datetime, date
 import os
 from dotenv import load_dotenv
+load_dotenv()
 app = Flask(__name__)
 app.secret_key = os.getenv('SECRET_KEY')
 
